@@ -54,6 +54,7 @@ room['treasure'].s_to = room['narrow']
 valid_moves = ['n', 's', 'e', 'w', 'q']
 
 def make_a_move(room, direction):
+    
     try:
         if direction == 'n':
             return room.n_to
@@ -75,21 +76,28 @@ def main():
     # Main loop
     while True:
         print(f'\nCurrent location: {player.current_room.name}.')
+
+        # Get player input
         cmd = input("Which direction will you choose? ")
-        # Validate Input
+
+        # Validate input
         if cmd not in valid_moves:
             print(f'"{cmd}" is not a valid move. Please enter "n", "s", "e", "w", or "q"')
             continue
+        
+        # Allow player to leave the game if they really want to
         elif cmd == 'q':
             break
+
+        # Try to make a move.
+        # If that move leads to a room, set their current_room to that room.
+        # If that move doesn't lead to a room, let them know and restart the loop.
         else:
             new_room = make_a_move(player.current_room, cmd)
             if new_room:
                 player.current_room = new_room
             else:
                 print("There is no room in that direction! Please try again.")
-                continue
-        
-        
 
-main()
+if __name__ == "__main__":
+    main()
