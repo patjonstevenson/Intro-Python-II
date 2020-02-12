@@ -67,6 +67,10 @@ def make_a_move(room, direction):
     except:
         return 0
         
+def print_items(room):
+    for item in rooms.item:
+        print(f'Name: {item.name}')
+        print(f'Description: {item.description}\n')
 
 def main():
     # Initialize player
@@ -76,6 +80,8 @@ def main():
     # Main loop
     while True:
         print(f'\nCurrent location: {player.current_room.name}.')
+        print('Items available in this room:\n')
+        print_items(player.current_room)
 
         # Get player input
         cmd = input("Which direction will you choose? ")
