@@ -1,5 +1,6 @@
 from room import Room
 from player import Player
+from item import Item
 
 # Declare all the rooms
 
@@ -51,24 +52,19 @@ room['treasure'].s_to = room['narrow']
 #
 # If the user enters "q", quit the game.
 
-valid_moves = ['n', 's', 'e', 'w', 'q']
+moves = ['n', 's', 'e', 'w', 'q']
 
+'''
 def make_a_move(room, direction):
-    
-    try:
-        if direction == 'n':
-            return room.n_to
-        elif direction == 's':
-            return  room.s_to
-        elif direction == 'e':
-            return room.e_to
-        elif direction == 'w':
-            return room.w_to
-    except:
-        return 0
-        
+    next_room = getattr(room, f"{direction}_to")
+    return next_room or 0
+
+def take_action(verb, obj):
+    pass
+'''
+
 def print_items(room):
-    for item in rooms.item:
+    for item in room.items:
         print(f'Name: {item.name}')
         print(f'Description: {item.description}\n')
 
@@ -80,6 +76,7 @@ def main():
     # Main loop
     while True:
         print(f'\nCurrent location: {player.current_room.name}.')
+        print(player.current_room.description)
         print('Items available in this room:\n')
         print_items(player.current_room)
 
@@ -87,7 +84,7 @@ def main():
         cmd = input("Which direction will you choose? ")
 
         # Validate input
-        if cmd not in valid_moves:
+        if cmd not in moves:
             print(f'"{cmd}" is not a valid move. Please enter "n", "s", "e", "w", or "q"')
             continue
         
@@ -98,12 +95,20 @@ def main():
         # Try to make a move.
         # If that move leads to a room, set their current_room to that room.
         # If that move doesn't lead to a room, let them know and restart the loop.
-        else:
-            new_room = make_a_move(player.current_room, cmd)
-            if new_room:
-                player.current_room = new_room
-            else:
-                print("There is no room in that direction! Please try again.")
+        elif cmd in moves:
+            #new_room = make_a_move(player.current_room, cmd)
+            #if new_room:
+            #    player.current_room = new_room
+            #else:
+            #    print("There is no room in that direction! Please try again.")
+            player.move(cmd)
+
+
+
+        elif len(cmd) == 2:
+            verb = cmd[0]
+            obj = cmd [1]
+
 
 if __name__ == "__main__":
     main()
