@@ -1,6 +1,7 @@
 from room import Room
 from player import Player
 from item import Item
+from exceptions import EndGame, InputError, ItemNotFound
 
 # Declare all the rooms
 
@@ -42,6 +43,7 @@ items = {
     'breviary': Item('breviary', 'book containing the prayers of the Liturgy of the Hours')
 }
 
+
 #
 # Main
 #
@@ -71,6 +73,12 @@ def take_action(verb, obj):
 '''
 
 
+def initialize_rooms(rooms, items):
+    rooms['outside'].add_item(items['sword'])
+    rooms['foyer'].add_item(items['breviary'])
+    rooms['treasure'].add_item(items['grail'])
+
+
 def print_items(room):
     for item in room.items:
         print(f'Name: {item.name}')
@@ -81,29 +89,43 @@ def handle_cmd(cmd, player):
     room = player.current_room
     directions = ['n', 's', 'e', 'w']
     verbs = ['get', 'take', 'drop']
-    objects = room.items.concat(player.inventory)
+    objects = room.items + player.inventory
 
-    if len(cmd) == 1:
+    if " " not in cmd:
         if cmd == 'q':
             raise EndGame
         elif cmd in directions:
             player.move(cmd)
+        elif cmd == 'i' or cmd == 'inventory':
+            print("\nInventory:")
+            for item in player.inventory:
+                print(f'+ {item.name} +')
+                print(f'"{item.description}"\n')
         else:
             print(f'"{cmd}" is not a valid move.')
-    elif len(cmd) == 2:
-        verb = cmd[0]
-        obj = cmd[1]
-        if verb in verbs and obj in objects:
-            if verb == "take" or verb == "get":
-                item = room.get_item(obj)
-                player.add_item(item)
-            elif verb == "drop":
-                item = player.drop_item(obj)
-                room.add_item(item)
+    else:
+        [verb, obj] = cmd.split(" ")
+        if verb in verbs and obj in [obj.name for obj in objects]:
+            try:
+                if verb == "take" or verb == "get":
+                    item = room.get_item(obj)
+                    player.add_item(item)
+                    print(f'You have picked up {obj}!')
+                elif verb == "drop":
+                    item = player.drop_item(obj)
+                    room.add_item(item)
+                    print(f'You have dropped {obj}!')
+            except ItemNotFound:
+                print(f'{obj} not found there!')
+
+        else:
+            raise InputError
 
 
-class EndGame(Exception):
-    pass
+def player_won(player):
+    inventory = [item.name for item in player.inventory]
+    room = player.current_room.name
+    return 'grail' in inventory and room == 'Outside Cave Entrance'
 
 
 def main():
@@ -111,41 +133,55 @@ def main():
     name = input("Enter your name: ")
     player = Player(name, room['outside'])
     print(f'Welcome to the game {name}!')
+
+    # Initialize Rooms
+    initialize_rooms(room, items)
+
     # Main loop
     try:
         while True:
+            if player_won(player):
+                print("You won!")
+                raise EndGame
             print(f'\nCurrent location: {player.current_room.name}.')
             print(player.current_room.description)
-            print('Items available in this room:\n')
+            print('\nItems available in this room:\n')
             print_items(player.current_room)
 
             # Get player input
-            cmd = input("Which direction will you choose? ")
+            # cmd = input("Which direction will you choose? ")
+            cmd = input('~~> ')
 
-            # Validate input
-            if cmd not in moves:
-                print(f'"{cmd}" is not a valid move. Please enter "n", "s", "e", "w", or "q"')
-                continue
+            try:
+                handle_cmd(cmd, player)
+            except InputError:
+                print(f'"{cmd}" is not a valid command.')
 
-            # Allow player to leave the game if they really want to
-            elif cmd == 'q':
-                break
+                # Validate input
+                # if cmd not in moves:
+                #     print(f'"{cmd}" is not a valid move. Please enter "n", "s", "e", "w", or "q"')
+                #     continue
 
-            # Try to make a move.
-            # If that move leads to a room, set their current_room to that room.
-            # If that move doesn't lead to a room, let them know and restart the loop.
-            elif cmd in moves:
-                #new_room = make_a_move(player.current_room, cmd)
-                # if new_room:
-                #    player.current_room = new_room
-                # else:
-                #    print("There is no room in that direction! Please try again.")
-                player.move(cmd)
+                # # Allow player to leave the game if they really want to
+                # elif cmd == 'q':
+                #     break
 
-            elif len(cmd) == 2:
-                verb = cmd[0]
-                obj = cmd[1]
+                # # Try to make a move.
+                # # If that move leads to a room, set their current_room to that room.
+                # # If that move doesn't lead to a room, let them know and restart the loop.
+                # elif cmd in moves:
+                #     #new_room = make_a_move(player.current_room, cmd)
+                #     # if new_room:
+                #     #    player.current_room = new_room
+                #     # else:
+                #     #    print("There is no room in that direction! Please try again.")
+                #     player.move(cmd)
+
+                # elif len(cmd) == 2:
+                #     verb = cmd[0]
+                #     obj = cmd[1]
     except EndGame:
+        print(f"\nThank you for playing {player.name}!\n")
         pass
 
 

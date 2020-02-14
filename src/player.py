@@ -1,6 +1,8 @@
 # Write a class to hold player information, e.g. what room they are in
 # currently.
 
+from exceptions import ItemNotFound
+
 
 class Player:
     def __init__(self, name, starting_room):
@@ -14,10 +16,13 @@ class Player:
     def drop_item(self, name):
         # Find item
         count = 0
+        index = None
         for i in self.inventory:
             if i.name == name:
                 index = count
             count += 1
+        if index == None:
+            raise ItemNotFound
         return self.inventory.pop(index)
 
     def move(self, direction):
