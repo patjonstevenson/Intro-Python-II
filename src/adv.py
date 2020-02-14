@@ -35,6 +35,13 @@ room['narrow'].w_to = room['foyer']
 room['narrow'].n_to = room['treasure']
 room['treasure'].s_to = room['narrow']
 
+# Items
+items = {
+    'sword': Item('sword', 'two-handed melee weapon'),
+    'grail': Item('grail', 'sanctum calicem - Domine non sum dignus...'),
+    'breviary': Item('breviary', 'book containing the prayers of the Liturgy of the Hours')
+}
+
 #
 # Main
 #
@@ -63,51 +70,83 @@ def take_action(verb, obj):
     pass
 '''
 
+
 def print_items(room):
     for item in room.items:
         print(f'Name: {item.name}')
         print(f'Description: {item.description}\n')
 
+
+def handle_cmd(cmd, player):
+    room = player.current_room
+    directions = ['n', 's', 'e', 'w']
+    verbs = ['get', 'take', 'drop']
+    objects = room.items.concat(player.inventory)
+
+    if len(cmd) == 1:
+        if cmd == 'q':
+            raise EndGame
+        elif cmd in directions:
+            player.move(cmd)
+        else:
+            print(f'"{cmd}" is not a valid move.')
+    elif len(cmd) == 2:
+        verb = cmd[0]
+        obj = cmd[1]
+        if verb in verbs and obj in objects:
+            if verb == "take" or verb == "get":
+                item = room.get_item(obj)
+                player.add_item(item)
+            elif verb == "drop":
+                item = player.drop_item(obj)
+                room.add_item(item)
+
+
+class EndGame(Exception):
+    pass
+
+
 def main():
     # Initialize player
     name = input("Enter your name: ")
-    player = Player(name, room['outside']);
+    player = Player(name, room['outside'])
     print(f'Welcome to the game {name}!')
     # Main loop
-    while True:
-        print(f'\nCurrent location: {player.current_room.name}.')
-        print(player.current_room.description)
-        print('Items available in this room:\n')
-        print_items(player.current_room)
+    try:
+        while True:
+            print(f'\nCurrent location: {player.current_room.name}.')
+            print(player.current_room.description)
+            print('Items available in this room:\n')
+            print_items(player.current_room)
 
-        # Get player input
-        cmd = input("Which direction will you choose? ")
+            # Get player input
+            cmd = input("Which direction will you choose? ")
 
-        # Validate input
-        if cmd not in moves:
-            print(f'"{cmd}" is not a valid move. Please enter "n", "s", "e", "w", or "q"')
-            continue
-        
-        # Allow player to leave the game if they really want to
-        elif cmd == 'q':
-            break
+            # Validate input
+            if cmd not in moves:
+                print(f'"{cmd}" is not a valid move. Please enter "n", "s", "e", "w", or "q"')
+                continue
 
-        # Try to make a move.
-        # If that move leads to a room, set their current_room to that room.
-        # If that move doesn't lead to a room, let them know and restart the loop.
-        elif cmd in moves:
-            #new_room = make_a_move(player.current_room, cmd)
-            #if new_room:
-            #    player.current_room = new_room
-            #else:
-            #    print("There is no room in that direction! Please try again.")
-            player.move(cmd)
+            # Allow player to leave the game if they really want to
+            elif cmd == 'q':
+                break
 
+            # Try to make a move.
+            # If that move leads to a room, set their current_room to that room.
+            # If that move doesn't lead to a room, let them know and restart the loop.
+            elif cmd in moves:
+                #new_room = make_a_move(player.current_room, cmd)
+                # if new_room:
+                #    player.current_room = new_room
+                # else:
+                #    print("There is no room in that direction! Please try again.")
+                player.move(cmd)
 
-
-        elif len(cmd) == 2:
-            verb = cmd[0]
-            obj = cmd [1]
+            elif len(cmd) == 2:
+                verb = cmd[0]
+                obj = cmd[1]
+    except EndGame:
+        pass
 
 
 if __name__ == "__main__":
